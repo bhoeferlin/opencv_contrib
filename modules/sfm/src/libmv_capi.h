@@ -67,6 +67,12 @@ using namespace google;
 namespace gflags {}
 using namespace gflags;
 
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#   define snprintf _snprintf
+#endif
+
+
 ////////////////////////////////////////
 // Based on 'libmv_capi' (blender API)
 ///////////////////////////////////////

@@ -161,6 +161,21 @@ Ptr<SIFT> SIFT::create( int _nfeatures, int _nOctaveLayers,
 
 /******************************* Defs and macros *****************************/
 
+// default number of sampled intervals per octave
+static const int SIFT_INTVLS = 3;
+
+// default sigma for initial gaussian smoothing
+static const float SIFT_SIGMA = 1.6f;
+
+// default threshold on keypoint contrast |D(x)|
+static const float SIFT_CONTR_THR = 0.04f;
+
+// default threshold on keypoint ratio of principle curvatures
+static const float SIFT_CURV_THR = 10.f;
+
+// double image size before pyramid construction?
+static const bool SIFT_IMG_DBL = true;
+
 // default width of descriptor histogram array
 static const int SIFT_DESCR_WIDTH = 4;
 
@@ -791,7 +806,12 @@ void SIFT_Impl::detectAndCompute(InputArray _image, InputArray _mask,
         actualNOctaves = maxOctave - firstOctave + 1;
     }
 
-    Mat base = createInitialImage(image, firstOctave < 0, (float)sigma);
+	Mat base;
+	if( (_image.size().width * _image.size().height) <= 2073600 ) // smaller than full HD
+		base = createInitialImage(image, firstOctave < 0, (float)sigma);
+	else
+		base = createInitialImage(image, false, (float)sigma);
+
     std::vector<Mat> gpyr, dogpyr;
     int nOctaves = actualNOctaves > 0 ? actualNOctaves : cvRound(std::log( (double)std::min( base.cols, base.rows ) ) / std::log(2.) - 2) - firstOctave;
 
@@ -814,7 +834,7 @@ void SIFT_Impl::detectAndCompute(InputArray _image, InputArray _mask,
         //t = (double)getTickCount() - t;
         //printf("keypoint detection time: %g\n", t*1000./tf);
 
-        if( firstOctave < 0 )
+        if( firstOctave < 0 && 	(_image.size().width * _image.size().height) <= 2073600 )
             for( size_t i = 0; i < keypoints.size(); i++ )
             {
                 KeyPoint& kpt = keypoints[i];
